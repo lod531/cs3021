@@ -5,6 +5,59 @@
 ;i is in r26, j is in r27
 ;temporary variable k is in r16
 
-p:	add 	r26, r27, r16
-	sll
-	
+p:	add 	r26, r27, r16 	;r16 = k = i+j
+	sll	r16, #2, r26  	;r26 = k<<2
+				;r26 in current frame is r10 in calee frame, 
+				;where the returned value is expected
+	sub	r26, #1, r26  	;decrement return value
+	ret	r31, #0	     	;r31 in current frame is
+				;r15 in callee frame, where
+				;the return address was stored.
+				;SPARC standard says return address
+				;is in r15 of caller frame
+	xor	r0, r0, r0	;nop
+
+;function int q(int i)
+;i is in r26
+
+q:	add	r0, r9, r10	;r10 in this frame is r26 in next
+				;i.e. first paramter = g
+	sub	r0, r26, r11	;r11 in this frame is r27 in next
+				;i.e. first parameter = -i
+	call	0, p, r15	;r15 in this frame is r31 in next
+	xor	r0, r0, r0	;nop
+				;p returns value in r10
+	add	r0, r10, r26	;move result to r26, which is
+				;r10 is the frame of the callee
+	ret	r31, #0		;r31 in this frame is r15 in 
+				;callee frame
+				;SPARC standard says return address
+				;is in r15 of caller frame
+	xor	r0, r0, r0	;nop
+
+
+
+;function int f(int n)
+;f is in r26
+
+f:	rsb	r26, #0, r0, {C};cmp n, #0
+	blt	return1		;if n < 0, return 1
+	sub	r26, #1, r10	;next paramater = n-1
+	call	0, f, r15	;r15 in this frame is r31 in next
+	xor	r0, r0, r0	;nop
+	mul	r26, r10, r26	;return n * f(n-1)
+				;r26 in this frame is r10
+				;in callee frame
+;could have to sub r26 for an intermediate register
+;as writing into and reading from r26 in one instruction
+;could be problematic
+	ret	r31, #0		;r31 is r15 in callee frame
+				;SPARC standard says return address
+				;is in r15 of caller frame
+	xor	r0, r0, r0
+return1:
+	add	r0, #1, r26	;r26 is r10 in callee frame
+	ret	r31, #0		;r31 is r15 in callee frame
+				;SPARC standard says return address
+				;is in r15 of caller frame
+	xor	r0, r0, r0	;nop

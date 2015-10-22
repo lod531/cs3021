@@ -1,0 +1,10 @@
+;setting up global constant g
+	add	r0, #26, r9
+
+;function int p(int i, int j)
+;i is in r26, j is in r27
+;temporary variable k is in r16
+
+p:	add 	r26, r27, r16
+	sll
+	

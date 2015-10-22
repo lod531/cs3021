@@ -1,5 +1,5 @@
 ;setting up global constant g
-	add	r0, #26, r9
+	add	r0, #265, r9
 
 ;function int p(int i, int j)
 ;i is in r26, j is in r27
@@ -7,11 +7,11 @@
 
 p:	add 	r26, r27, r16 	;r16 = k = i+j
 	sll	r16, #2, r26  	;r26 = k<<2
-				;r26 in current frame is r10 in calee frame, 
+				;r26 in current frame is r10 in caller frame, 
 				;where the returned value is expected
 	sub	r26, #1, r26  	;decrement return value
 	ret	r31, #0	     	;r31 in current frame is
-				;r15 in callee frame, where
+				;r15 in caller frame, where
 				;the return address was stored.
 				;SPARC standard says return address
 				;is in r15 of caller frame
@@ -24,13 +24,16 @@ q:	add	r0, r9, r10	;r10 in this frame is r26 in next
 				;i.e. first paramter = g
 	sub	r0, r26, r11	;r11 in this frame is r27 in next
 				;i.e. first parameter = -i
-	call	0, p, r15	;r15 in this frame is r31 in next
+	call	0, p, r15	;r15 in this frame is r31 in callee 
+				;frame
+				;return address in r15 as per SPARC
+				;standard
 	xor	r0, r0, r0	;nop
 				;p returns value in r10
 	add	r0, r10, r26	;move result to r26, which is
-				;r10 is the frame of the callee
+				;r10 is the frame of the caller
 	ret	r31, #0		;r31 in this frame is r15 in 
-				;callee frame
+				;caller frame
 				;SPARC standard says return address
 				;is in r15 of caller frame
 	xor	r0, r0, r0	;nop
@@ -41,7 +44,8 @@ q:	add	r0, r9, r10	;r10 in this frame is r26 in next
 ;f is in r26
 
 f:	rsb	r26, #0, r0, {C};cmp n, #0
-	blt	return1		;if n < 0, return 1
+	bls	return1		;if n < 0, return 1
+	xor	r0, r0, r0	;nop
 	sub	r26, #1, r10	;next paramater = n-1
 	call	0, f, r15	;r15 in this frame is r31 in next
 	xor	r0, r0, r0	;nop

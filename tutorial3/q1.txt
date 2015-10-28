@@ -55,7 +55,7 @@ f:	rsb	r26, #0, r0, {C};cmp n, #0
 ;could have to sub r26 for an intermediate register
 ;as writing into and reading from r26 in one instruction
 ;could be problematic
-	ret	r31, #0		;r31 is r15 in callee frame
+	ret	r31, #0		;r31 is r15 in caller frame
 				;SPARC standard says return address
 				;is in r15 of caller frame
 	xor	r0, r0, r0

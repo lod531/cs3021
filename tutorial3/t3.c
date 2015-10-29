@@ -4,19 +4,25 @@
 
 int topRecursionDepth = 0;
 
-int ackermann(int x, int y)
+int overFlowCount = 0;
+
+int ackermann(int x, int y, int recursionDepth)
 {
+	if(recursionDepth > 15) 
+	{
+		overFlowCount++;
+	}
 	if(x == 0)
 	{
 		return y+1;
 	}
 	else if(y == 0)
 	{
-		return ackermann(x-1, 1);
+		return ackermann(x-1, 1, recursionDepth+1);
 	}
 	else
 	{
-		return ackermann(x-1, ackermann(x, y-1));
+		return ackermann(x-1, ackermann(x, y-1, recursionDepth+1), recursionDepth+1);
 	}
 }
 
@@ -28,13 +34,14 @@ int main()
 	start = clock();
 	int BS = 0;
 	int i;
-	for(i = 0; i < 10000; i++)
+	for(i = 0; i < 1; i++)
 	{
-		BS+=ackermann(3, 6);
+		BS+=ackermann(3, 6, 0);
 	}
 	end = clock();
 	microSeconds = end - start;
 	microSeconds = microSeconds/(i+1);
 	printf("Microseconds taken: %lu\n(average of %d runs)\n", microSeconds, i);
+	printf("%d\n", overFlowCount);
 	return 0;
 }

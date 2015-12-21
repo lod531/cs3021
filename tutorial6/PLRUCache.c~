@@ -19,7 +19,7 @@ int exponentiate(int base, int exponent)
 //CACHE SET START//////////////////////////////////////////////////////////////////////////
 struct cacheSet
 {
-	int * * lruArray;
+	int * pseudoLRUArray;
 	int * tags;
 	int numberOfTagsPerSet;
 };
@@ -28,11 +28,11 @@ struct cacheSet
 struct cacheSet * cacheSetNew(int numberOfTagsPerSet)
 {
 	struct cacheSet * result = malloc(sizeof(struct cacheSet));
-	result->lruArray = malloc(sizeof(int *) * numberOfTagsPerSet);
 	int i;
-	for(i = 0; i < numberOfTagsPerSet; i++)
+	result->pseudoLRUArray = malloc(sizeof(int) * numberOfTagsPerSet * 2);
+	for(i = 0; i < numberOfTagsPerSet * 2; i++)
 	{
-		result->lruArray[i] = malloc(sizeof(int) * numberOfTagsPerSet);
+		result->pseudoLRUArray[i] = 0;
 	}
 	result->tags = malloc(sizeof(int) * numberOfTagsPerSet);
 	for(i = 0; i < numberOfTagsPerSet; i++)
@@ -57,39 +57,33 @@ int cacheSetIsInSet(struct cacheSet * this, int tag)
 
 int cacheSetFindLRUIndex(struct cacheSet * this)
 {
-	int i;
-	int j;
-	for(i = 0; i < this->numberOfTagsPerSet; i++)
+	int i = 1;
+	while(i < this->numberOfTagsPerSet)
 	{
-		int encounteredOne = 0;
-		for(j = 0; j < this->numberOfTagsPerSet && !encounteredOne; j++)
+		if(this->pseudoLRUArray[i] == 0)
 		{
-			encounteredOne = this->lruArray[i][j];
+			i = i*2;
 		}
-		if(!encounteredOne)
+		else
 		{
-			return i;
+			i = i*2 + 1;
 		}
 	}
-	printf("error in cacheSetFindLRU, should never be able to reach this printf\n");
-	exit(1);
+	return i - this->numberOfTagsPerSet;
 }
 
 
 void cacheSetUpdateLRU(struct cacheSet * this, int tagIndex)
 {
-	int i;
-
-	for(i = 0; i < this->numberOfTagsPerSet; i++)
+	int i = tagIndex + this->numberOfTagsPerSet;
+	int direction = tagIndex % 2; //if 0, came up from left, if 1 came up from right
+	while(i > 0)
 	{
+		this->pseudoLRUArray[i] = (direction == this->pseudoLRUArray[i])? !(this->pseudoLRUArray[i]) : this->pseudoLRUArray[i];
+		direction = i % 2;
+		i = i/2;
+	}
 
-		this->lruArray[tagIndex][i] = 1;
-	}
-	
-	for(i = 0; i < this->numberOfTagsPerSet; i++)
-	{
-		this->lruArray[i][tagIndex] = 0;
-	}
 }
 
 void cacheSetInsert(struct cacheSet * this, int tagToBeInserted)
@@ -209,7 +203,7 @@ void cacheTest(int numberOfCacheLineOffsetBits, int numberOfSetBits, int numberO
 	cacheAccess(test, 0x3394);
 	printf("Number of hits: %d\n\n\n", hits);
 }
-	
+
 
 
 int main(int argc, char * * argv)
